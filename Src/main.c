@@ -29,6 +29,7 @@
 #include "stdio.h"
 #include "stm32f4xx_hal_pcd.h"
 #include "stm32f4xx_ll_fsmc.h"
+#include "stm32f4xx_hal_sram.h"
 
 /* USER CODE END Includes */
 
@@ -48,6 +49,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+RTC_HandleTypeDef hrtc;
+
 SPI_HandleTypeDef hspi2;
 
 TIM_HandleTypeDef htim2;
@@ -65,6 +68,8 @@ int32_t broiach = 0;
 double *dblcnahge;
 const double dblstep = 0.0001;
 
+//sram_t *sram = (uint32_t *) BKPSRAM;
+
 double dxarr[] = {0.0, 1.1, -2.2, 3.3};
 double dyarr[] = {0.0, 1.11, -2.21, 3.31};
 
@@ -81,6 +86,7 @@ static void MX_SPI2_Init(void);
 static void MX_USB_OTG_HS_PCD_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_RTC_Init(void);
 static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -204,15 +210,19 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_FSMC_Init();
-  MX_SPI2_Init();  
+  MX_SPI2_Init();
   MX_USB_DEVICE_Init();
   MX_USB_OTG_HS_PCD_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+  MX_RTC_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 
   USB_Enumeration();
+  __BKPSRAM_CLK_ENABLE();
+
+  HAL_PWR_EnableBkUpAccess();       //SRAM
 
   HAL_TIM_Encoder_Start(&htim2,TIM_CHANNEL_ALL);        //manual encoder
   HAL_TIM_Encoder_Start(&htim3,TIM_CHANNEL_ALL);        //X axis
@@ -252,7 +262,7 @@ int main(void)
 //  double zact = 0.0003;
 
   //zadanie
-  double x = 0.0003;
+  double x = 0.0033;
   double y = 0.0004;
 //  double z = 0.0005;
 
@@ -275,6 +285,9 @@ int main(void)
   int i = 0;
 
   TIM2->CNT = 128;
+
+  HAL_SRAM_Write_8b(&hsram1, 0, &x, sizeof(double));
+  HAL_SRAM_Read_8b(&hsram1, 0, &x, sizeof(double));
 
   while (1)
   {
@@ -346,6 +359,7 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
   /** Configure the main internal regulator output voltage 
   */
@@ -353,8 +367,9 @@ void SystemClock_Config(void)
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
   /** Initializes the CPU, AHB and APB busses clocks 
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 4;
@@ -378,6 +393,74 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC;
+  PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief RTC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_RTC_Init(void)
+{
+
+  /* USER CODE BEGIN RTC_Init 0 */
+
+  /* USER CODE END RTC_Init 0 */
+
+  RTC_TimeTypeDef sTime = {0};
+  RTC_DateTypeDef sDate = {0};
+
+  /* USER CODE BEGIN RTC_Init 1 */
+
+  /* USER CODE END RTC_Init 1 */
+  /** Initialize RTC Only 
+  */
+  hrtc.Instance = RTC;
+  hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+  hrtc.Init.AsynchPrediv = 127;
+  hrtc.Init.SynchPrediv = 255;
+  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /* USER CODE BEGIN Check_RTC_BKUP */
+    
+  /* USER CODE END Check_RTC_BKUP */
+
+  /** Initialize RTC and set the Time and Date 
+  */
+  sTime.Hours = 0x0;
+  sTime.Minutes = 0x0;
+  sTime.Seconds = 0x0;
+  sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+  sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+  if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sDate.WeekDay = RTC_WEEKDAY_MONDAY;
+  sDate.Month = RTC_MONTH_JANUARY;
+  sDate.Date = 0x1;
+  sDate.Year = 0x0;
+
+  if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN RTC_Init 2 */
+
+  /* USER CODE END RTC_Init 2 */
+
 }
 
 /**
@@ -439,7 +522,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 255;
+  htim2.Init.Period = 95;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV2;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.EncoderMode = TIM_ENCODERMODE_TI12;

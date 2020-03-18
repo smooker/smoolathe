@@ -86,7 +86,7 @@ void ILI9341_Init(void)
    ILI9341_SendData16   (0x01); // y1_HIGH---320
    ILI9341_SendData16   (0x3F); // y1_LOW----320
 
-   ILI9341_SendCommand16 (ILI9341_TEARING_OFF); // tearing effect off
+   ILI9341_SendCommand16 (ILI9341_TEARING_ON); // tearing effect off
    //LCD_write_cmd(ILI9341_TEARING_ON); // tearing effect on
    //LCD_write_cmd(ILI9341_DISPLAY_INVERSION); // display inversion
    ILI9341_SendCommand16 (ILI9341_Entry_Mode_Set); // entry mode set
