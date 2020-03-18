@@ -60,6 +60,17 @@ SRAM_HandleTypeDef hsram1;
 
 /* USER CODE BEGIN PV */
 
+
+int32_t broiach = 0;
+double *dblcnahge;
+const double dblstep = 0.0001;
+
+double dxarr[] = {0.0, 1.1, -2.2, 3.3};
+double dyarr[] = {0.0, 1.11, -2.21, 3.31};
+
+const int arrsize = sizeof(dxarr)/sizeof(double);
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -121,6 +132,47 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   return;
 }
 
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+    BKPT;
+}
+
+uint8_t moved(int kolko)
+{
+
+    if (abs(kolko) % 4) {
+        //ne sme mrydnali dostatychno
+        return 0;
+    }
+
+    if (kolko > 0) {
+        if ((broiach + abs(kolko)/4) < arrsize) {     //fixme.. array size
+            broiach += kolko/4;
+        } else {
+            (*dblcnahge) += dblstep;
+        }
+        return 1;
+    }
+
+    if (kolko < 0) {
+        if ( (broiach - abs(kolko)/4) >= 0) {
+            broiach -= abs(kolko)/4;
+        } else {
+            (*dblcnahge) -= dblstep;
+        }
+        return 1;
+    }
+}
+
+void processtim2()
+{
+    uint32_t val = TIM2->CNT;
+    if (val == 128)
+        return;
+    if (moved(128-val)) {
+        TIM2->CNT = 128;
+    }
+}
 /* USER CODE END 0 */
 
 /**
@@ -162,9 +214,9 @@ int main(void)
 
   USB_Enumeration();
 
-  HAL_TIM_Encoder_Start(&htim2,TIM_CHANNEL_ALL);
-  HAL_TIM_Encoder_Start(&htim3,TIM_CHANNEL_ALL);
-  HAL_TIM_Encoder_Start(&htim4,TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start(&htim2,TIM_CHANNEL_ALL);        //manual encoder
+  HAL_TIM_Encoder_Start(&htim3,TIM_CHANNEL_ALL);        //X axis
+  HAL_TIM_Encoder_Start(&htim4,TIM_CHANNEL_ALL);        //Y axis
 
 //  HAL_GPIO_WritePin(RST_GPIO_Port, RST_Pin, GPIO_PIN_RESET);
 //  HAL_Delay(10);
@@ -186,7 +238,6 @@ int main(void)
 
 //  HAL_Delay(1000);
 
-
 //  ILI9341_printImage(50, 50, 80, 130, myImage, sizeof(myImage));
 
   /* USER CODE END 2 */
@@ -194,32 +245,36 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  char buffer[] = "proba\r\n";
-
   //fixme later
   //actual -deistvitelni
-  double xact = 0.0001;
-  double yact = 0.0002;
-  double zact = 0.0003;
+//  double xact = 0.0001;
+//  double yact = 0.0002;
+//  double zact = 0.0003;
 
   //zadanie
-  float x = 0.0003;
+  double x = 0.0003;
   double y = 0.0004;
-  double z = 0.0005;
+//  double z = 0.0005;
+
+  //fixme
+  dblcnahge = &x;
 
   char buffx[32] = "NOT SET!";
   char buffy[32] = "NOT SET!";
-  char buffz[32] = "NOT SET!";
+//  char buffz[32] = "NOT SET!";
 
-  char buffxact[32] = "NOT SET!";
-  char buffyact[32] = "NOT SET!";
-  char buffzact[32] = "NOT SET!";
+  char buffdx[32] = "NOT SET!";
+  char buffdy[32] = "NOT SET!";
+//  char buffzact[32] = "NOT SET!";
 
   char buffenc2[32] = "NOT SET!";
   char buffenc3[32] = "NOT SET!";
   char buffenc4[32] = "NOT SET!";
+  char buffencbroiach[32] = "NOT SET!";
 
   int i = 0;
+
+  TIM2->CNT = 128;
 
   while (1)
   {
@@ -231,38 +286,40 @@ int main(void)
 //    ILI9341_fillCircle(110,190, 80, COLOR_RED);
 
 //    ILI9341_Fill(COLOR_BLACK);
-      ILI9341_Fill_Rect(0, 0, 256, 64, COLOR_BLUE);
+      ILI9341_Fill_Rect(0, 0, 256, 124, COLOR_BLUE);
 
     HAL_GPIO_TogglePin(LED_D2_GPIO_Port, LED_D2_Pin);
 
-    sprintf(buffx, "X:%9.4f mm", x);
-    sprintf(buffy, "Y:%9.4f mm", y);
-    sprintf(buffz, "Z:%9.4f mm", z);
+    sprintf(buffx, "X:%9.4f mm", x+dxarr[broiach]);
+    sprintf(buffy, "Y:%9.4f mm", y+dyarr[broiach]);
 
-    sprintf(buffxact, "X1:%9.4f mm", xact);
-    sprintf(buffyact, "Y1:%9.4f mm", yact);
-    sprintf(buffzact, "Z1:%9.4f mm", zact);
+    sprintf(buffdx, "dX:%9.4f mm", dxarr[broiach]);
+    sprintf(buffdy, "dY:%9.4f mm", dyarr[broiach]);
 
     sprintf(buffenc2, "%d", TIM2->CNT);
     sprintf(buffenc3, "%d", TIM3->CNT);
     sprintf(buffenc4, "%d", TIM4->CNT);
+
+    sprintf(buffencbroiach, "%d", broiach);
 
     //ILI9341_printText2 not needed!
 
     //Print text
     ILI9341_printText(buffx, 10,  5, COLOR_YELLOW, COLOR_YELLOW, 1);
     ILI9341_printText(buffy, 10, 15, COLOR_YELLOW, COLOR_YELLOW, 1);
-    ILI9341_printText(buffz, 10, 25, COLOR_YELLOW, COLOR_YELLOW, 1);
+//    ILI9341_printText(buffz, 10, 25, COLOR_YELLOW, COLOR_YELLOW, 1);
+
+    ILI9341_printText(buffdx, 130,  5, COLOR_YELLOW, COLOR_YELLOW, 1);
+    ILI9341_printText(buffdy, 130, 15, COLOR_YELLOW, COLOR_YELLOW, 1);
+//    ILI9341_printText(buffzact, 130, 25, COLOR_YELLOW, COLOR_YELLOW, 1);
+
     ILI9341_printText(buffenc2, 10, 35, COLOR_YELLOW, COLOR_YELLOW, 1);
     ILI9341_printText(buffenc3, 10, 45, COLOR_YELLOW, COLOR_YELLOW, 1);
     ILI9341_printText(buffenc4, 10, 55, COLOR_YELLOW, COLOR_YELLOW, 1);
+    ILI9341_printText(buffencbroiach, 10, 85, COLOR_YELLOW, COLOR_YELLOW, 4);
 
-    ILI9341_printText(buffxact, 130,  5, COLOR_YELLOW, COLOR_YELLOW, 1);
-    ILI9341_printText(buffyact, 130, 15, COLOR_YELLOW, COLOR_YELLOW, 1);
-    ILI9341_printText(buffzact, 130, 25, COLOR_YELLOW, COLOR_YELLOW, 1);
-
-    x += 10.0001;y += 11.0001;z += 12.0001;
-    xact += 13.0001;yact += 14.0001;zact += 15.0001;
+//    x += 10.0001;y += 11.0001;z += 12.0001;
+//    xact += 13.0001;yact += 14.0001;zact += 15.0001;
 
     //Print-Fill triangle
 //    ILI9341_fillTriangle(10, 160, 110, 160, 190, 300, COLOR_BLACK);
@@ -273,7 +330,8 @@ int main(void)
 //    CDC_Transmit_FS(buffer, sizeof(buffer));
 
     printf("cnt:%03d\r\n", i++);
-    HAL_Delay(100);
+    processtim2();
+    HAL_Delay(200);
 
     HAL_GPIO_TogglePin(LED_D3_GPIO_Port, LED_D3_Pin);
   }
@@ -381,7 +439,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 95;
+  htim2.Init.Period = 255;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV2;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
