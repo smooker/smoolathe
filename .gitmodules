@@ -1,0 +1,3 @@
+[submodule "STM32-touchscreen-XPT2046-HAL-SPI"]
+	path = STM32-touchscreen-XPT2046-HAL-SPI
+	url = git@github.com:taburyak/STM32-touchscreen-XPT2046-HAL-SPI.git

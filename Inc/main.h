@@ -73,6 +73,11 @@ void Error_Handler(void);
 #define LED_D2_GPIO_Port GPIOA
 #define LED_D3_Pin GPIO_PIN_7
 #define LED_D3_GPIO_Port GPIOA
+#define T_IRQ_Pin GPIO_PIN_5
+#define T_IRQ_GPIO_Port GPIOC
+#define T_IRQ_EXTI_IRQn EXTI9_5_IRQn
+#define T_CS_Pin GPIO_PIN_12
+#define T_CS_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 #define BKPT asm("bkpt 255")

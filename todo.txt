@@ -1,1 +1,16 @@
-funkcia za merene na sredi
+bugs:
+
+	TIM2->CNT ako stane nechetno - ne minava %4 i ne otchita userskia encoder
+
+	da se vidi touch-a kak se chete
+
+  da se vidi SRAM-a 
+
+
+
+funkcii:
+
+dobaviane na konstantni dx i dy kym cialata tablica
+
+funkcia za merene na sredi - da se vidi
+

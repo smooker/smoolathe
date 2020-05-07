@@ -1,1 +1,0 @@
--std=c++17 -Wno-error=unused-function -DSTM32F407xx -DUSB_OTG_FS -c99
