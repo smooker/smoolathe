@@ -73,6 +73,11 @@ const double dblstep = 0.0001;
 double dxarr[] = {0.0, 1.1, -2.2, 3.3};
 double dyarr[] = {0.0, 1.11, -2.21, 3.31};
 
+//zadanie
+double x = 0.0033;
+double y = 0.0004;
+//  double z = 0.0005;
+
 const int arrsize = sizeof(dxarr)/sizeof(double);
 
 
@@ -126,13 +131,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     {
      if(XPT2046_TouchPressed())
      {
-      uint16_t x = 0, y = 0;
-      if(XPT2046_TouchGetCoordinates(&x, &y))
+      uint16_t m_x = 0, y = 0;
+      if(XPT2046_TouchGetCoordinates(&m_x, &y))
       {
 //       lcdFillCircle((lcdGetWidth() - x), y, 2, COLOR_GREENYELLOW);
-        ILI9341_Fill_Rect(256-x, y, 256-x+2, y+2, COLOR_YELLOW);
+        ILI9341_Fill_Rect(256-m_x, y, 256-m_x+2, y+2, COLOR_YELLOW);
 //        BKPT;
       }
+      x = 0;
      }
     }
 
@@ -186,13 +192,34 @@ uint8_t moved(int kolko)
 
 void processtim2()
 {
-    uint32_t val = TIM2->CNT;
-    if (val == 128)
-        return;
-    if (moved(128-val)) {
-        TIM2->CNT = 128;
-    }
+//    uint32_t val = TIM2->CNT;
+//    if (val == 128)
+//        return;
+//    if (moved(128-val)) {
+//        TIM2->CNT = 128;
+//    }
 }
+
+/** (using the HAL library) backup SRAM initialization
+ *
+ * @param[in]   NULL
+ * @retval      Null
+**/
+void BKP_SRAM_Init(void)
+{
+    /* Power interface clock enable */
+    __HAL_RCC_PWR_CLK_ENABLE();
+
+    /* DBP location 1, enabling access to the backup domain */
+    HAL_PWR_EnableBkUpAccess();
+
+    /* Enables backup of the SRAM clock by setting the BKPSRAMEN bit in the RCC AHB1 peripheral clock enable register (RCC_AHB1ENR) */
+    __HAL_RCC_BKPSRAM_CLK_ENABLE();
+
+    /* The application must wait for the Backup Regulator Ready Flag (BRR) to be set to 1, indicating that the data written to RAM will be held in standby mode and VBAT mode. */
+    HAL_PWREx_EnableBkUpReg();
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -233,7 +260,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   USB_Enumeration();
-  __BKPSRAM_CLK_ENABLE();
+
+  BKP_SRAM_Init();
 
   HAL_PWR_EnableBkUpAccess();       //SRAM
 
@@ -274,10 +302,11 @@ int main(void)
 //  double yact = 0.0002;
 //  double zact = 0.0003;
 
-  //zadanie
-  double x = 0.0033;
-  double y = 0.0004;
-//  double z = 0.0005;
+  uint32_t proba = 124;
+
+//  HAL_RTCEx_BKUPWrite(&hrtc, 0, proba);
+
+  proba = HAL_RTCEx_BKUPRead(&hrtc, 0);
 
   //fixme
   dblcnahge = &x;
@@ -293,17 +322,20 @@ int main(void)
   char buffenc2[32] = "NOT SET!";
   char buffenc3[32] = "NOT SET!";
   char buffenc4[32] = "NOT SET!";
+  char buffenc5[32] = "NOT SET!";
   char buffencbroiach[32] = "NOT SET!";
 
-  int i = 0;
+//  int i = 0;
 
-  TIM2->CNT = 128;
+  TIM2->CNT = 0;
 
-  HAL_SRAM_Write_8b(&hsram1, 0, &x, sizeof(double));
-  HAL_SRAM_Read_8b(&hsram1, 0, &x, sizeof(double));
+
+//  HAL_SRAM_Write_8b(&hsram1, 0, &x, sizeof(double));
+//  HAL_SRAM_Read_8b(&hsram1, 0, &x, sizeof(double));
 
   while (1)
   {
+      x = TIM2->CNT*0.000005; //5 microns       //preventva nuliraneto ot touch pressed
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -316,15 +348,16 @@ int main(void)
 
     HAL_GPIO_TogglePin(LED_D2_GPIO_Port, LED_D2_Pin);
 
-    sprintf(buffx, "X:%9.4f mm", x+dxarr[broiach]);
-    sprintf(buffy, "Y:%9.4f mm", y+dyarr[broiach]);
+    sprintf(buffx, "X:%9.6f m", x+dxarr[broiach]);      //da se umnozhava po 2 - raius/diametyr na struga
+    sprintf(buffy, "Y:%9.6f mm", y+dyarr[broiach]);
 
-    sprintf(buffdx, "dX:%9.4f mm", dxarr[broiach]);
-    sprintf(buffdy, "dY:%9.4f mm", dyarr[broiach]);
+    sprintf(buffdx, "dX:%9.6f mm", dxarr[broiach]);
+    sprintf(buffdy, "dY:%9.6f mm", dyarr[broiach]);
 
     sprintf(buffenc2, "%d", TIM2->CNT);
     sprintf(buffenc3, "%d", TIM3->CNT);
     sprintf(buffenc4, "%d", TIM4->CNT);
+    sprintf(buffenc5, "%u", proba);
 
     sprintf(buffencbroiach, "%d", broiach);
 
@@ -342,6 +375,7 @@ int main(void)
     ILI9341_printText(buffenc2, 10, 35, COLOR_YELLOW, COLOR_YELLOW, 1);
     ILI9341_printText(buffenc3, 10, 45, COLOR_YELLOW, COLOR_YELLOW, 1);
     ILI9341_printText(buffenc4, 10, 55, COLOR_YELLOW, COLOR_YELLOW, 1);
+    ILI9341_printText(buffenc5, 10, 65, COLOR_YELLOW, COLOR_YELLOW, 1);
     ILI9341_printText(buffencbroiach, 10, 85, COLOR_YELLOW, COLOR_YELLOW, 4);
 
 //    x += 10.0001;y += 11.0001;z += 12.0001;
@@ -355,8 +389,8 @@ int main(void)
 
 //    CDC_Transmit_FS(buffer, sizeof(buffer));
 
-    printf("cnt:%03d\r\n", i++);
-    processtim2();
+//    printf("cnt:%03d\r\n", i++);
+//    processtim2();
     HAL_Delay(200);
 
     HAL_GPIO_TogglePin(LED_D3_GPIO_Port, LED_D3_Pin);
@@ -535,7 +569,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 95;
+  htim2.Init.Period = 4294967295;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV2;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
