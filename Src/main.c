@@ -138,7 +138,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         ILI9341_Fill_Rect(256-m_x, y, 256-m_x+2, y+2, COLOR_YELLOW);
 //        BKPT;
       }
-      x = 0;
+      TIM2->CNT = 0;
      }
     }
 
@@ -335,7 +335,10 @@ int main(void)
 
   while (1)
   {
-      x = TIM2->CNT*0.000005; //5 microns       //preventva nuliraneto ot touch pressed
+      //dolnoto e za metri
+//      x = TIM2->CNT*0.000005; //5 microns       //preventva nuliraneto ot touch pressed
+      //in mm
+      x = TIM2->CNT*0.005; //5 microns       //preventva nuliraneto ot touch pressed
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -348,15 +351,15 @@ int main(void)
 
     HAL_GPIO_TogglePin(LED_D2_GPIO_Port, LED_D2_Pin);
 
-    sprintf(buffx, "X:%9.6f m", x+dxarr[broiach]);      //da se umnozhava po 2 - raius/diametyr na struga
-    sprintf(buffy, "Y:%9.6f mm", y+dyarr[broiach]);
+    sprintf(buffx, "X:%09.3f mm", x+dxarr[broiach]);      //da se umnozhava po 2 - raius/diametyr na struga
+    sprintf(buffy, "Y:%09.3f mm", y+dyarr[broiach]);
 
-    sprintf(buffdx, "dX:%9.6f mm", dxarr[broiach]);
-    sprintf(buffdy, "dY:%9.6f mm", dyarr[broiach]);
+    sprintf(buffdx, "dX:%09.3f mm", dxarr[broiach]);
+    sprintf(buffdy, "dY:%09.3f mm", dyarr[broiach]);
 
-    sprintf(buffenc2, "%d", TIM2->CNT);
-    sprintf(buffenc3, "%d", TIM3->CNT);
-    sprintf(buffenc4, "%d", TIM4->CNT);
+    sprintf(buffenc2, "%u", TIM2->CNT);
+    sprintf(buffenc3, "%u", TIM3->CNT);
+    sprintf(buffenc4, "%u", TIM4->CNT);
     sprintf(buffenc5, "%u", proba);
 
     sprintf(buffencbroiach, "%d", broiach);

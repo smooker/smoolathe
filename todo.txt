@@ -14,3 +14,6 @@ dobaviane na konstantni dx i dy kym cialata tablica
 
 funkcia za merene na sredi - da se vidi
 
+viewer za chertezhi...
+pdf ili neznam si kvo si
+
