@@ -24,14 +24,6 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdint.h>
-#include "usbd_cdc_if.h"
-#include "stdio.h"
-#include "stm32f4xx_hal_pcd.h"
-#include "stm32f4xx_ll_fsmc.h"
-#include "stm32f4xx_hal_sram.h"
-
-#include "../STM32-touchscreen-XPT2046-HAL-SPI/XPT2046_touch.h"
 
 /* USER CODE END Includes */
 

@@ -32,17 +32,27 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "stm32f4xx_hal_def.h"
-#include <stdio.h>
-#include "stm32f407xx.h"
-#include  "stm32f4xx_hal.h"
-#include  "stm32f4xx_hal_sram.h"
-#include  "stm32f4xx_hal_pcd.h"
-#include "stm32f4xx_hal_flash.h"
 
+#include <stdio.h>
+#include <stdint.h>
+#include <stdint-gcc.h>
+
+#include "stm32f4xx_hal_def.h"
+#include "stm32f407xx.h"
+#include "stm32f4xx_hal.h"
+#include "stm32f4xx_hal_sram.h"
 #include "stm32f4xx_ll_fsmc.h"
+#include "stm32f4xx_hal_pcd.h"
+#include "stm32f4xx_hal_flash.h"
+#include "stm32f4xx_hal_rtc.h"
+#include "stm32f4xx_hal_tim.h"
+#include "stm32f4xx_ll_fsmc.h"
+#include "stm32f4xx_ll_usb.h"
+
+#include "usb_device.h"
 
 #include "../LCD/MA_ILI9341.h"
+#include "../STM32-touchscreen-XPT2046-HAL-SPI/XPT2046_touch.h"
 
 /* USER CODE END Includes */
 
