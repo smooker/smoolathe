@@ -48,8 +48,10 @@ extern "C" {
 #include "stm32f4xx_hal_tim.h"
 #include "stm32f4xx_ll_fsmc.h"
 #include "stm32f4xx_ll_usb.h"
+#include "stm32f4xx_hal_spi.h"
 
 #include "usb_device.h"
+#include "usbd_cdc_if.h"
 
 #include "../LCD/MA_ILI9341.h"
 #include "../STM32-touchscreen-XPT2046-HAL-SPI/XPT2046_touch.h"
@@ -83,11 +85,7 @@ void Error_Handler(void);
 #define LED_D2_GPIO_Port GPIOA
 #define LED_D3_Pin GPIO_PIN_7
 #define LED_D3_GPIO_Port GPIOA
-#define T_IRQ_Pin GPIO_PIN_5
-#define T_IRQ_GPIO_Port GPIOC
-#define T_IRQ_EXTI_IRQn EXTI9_5_IRQn
-#define T_CS_Pin GPIO_PIN_12
-#define T_CS_GPIO_Port GPIOB
+
 /* USER CODE BEGIN Private defines */
 
 #define BKPT asm("bkpt 255")
