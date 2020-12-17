@@ -69,6 +69,11 @@ double x = 0.0033;
 double y = 0.0004;
 //  double z = 0.0005;
 
+//touch screen
+uint16_t xtouch;
+uint16_t ytouch;
+bool fingerdown;
+
 const int arrsize = sizeof(dxarr)/sizeof(double);
 
 
@@ -118,18 +123,23 @@ PUTCHAR_PROTOTYPE {
 //fixme. Z signal processing
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-    if (GPIO_Pin == T_IRQ_Pin)
+    if (GPIO_Pin == T_IRQ_Pin)          //irq from touch screen
     {
      if(XPT2046_TouchPressed())
      {
+         fingerdown = true;
       uint16_t m_x = 0, y = 0;
       if(XPT2046_TouchGetCoordinates(&m_x, &y))
       {
+          xtouch = m_x;
+          ytouch = y;
 //       lcdFillCircle((lcdGetWidth() - x), y, 2, COLOR_GREENYELLOW);
-        ILI9341_Fill_Rect(256-m_x, y, 256-m_x+2, y+2, COLOR_YELLOW);
+        ILI9341_Fill_Rect(256-m_x, y, 256-m_x+1, y+1, COLOR_YELLOW);
 //        BKPT;
       }
       TIM2->CNT = 0;
+     } else {
+         fingerdown = false;
      }
     }
 
@@ -314,6 +324,9 @@ int main(void)
   char buffenc3[32] = "NOT SET!";
   char buffenc4[32] = "NOT SET!";
   char buffenc5[32] = "NOT SET!";
+  char buffenc6[32] = "NOT SET!";
+  char buffenc7[32] = "NOT SET!";
+
   char buffencbroiach[32] = "NOT SET!";
 
 //  int i = 0;
@@ -352,6 +365,8 @@ int main(void)
     sprintf(buffenc3, "%u", TIM3->CNT);
     sprintf(buffenc4, "%u", TIM4->CNT);
     sprintf(buffenc5, "%u", proba);
+    sprintf(buffenc6, "%u", xtouch);
+    sprintf(buffenc7, "%u", ytouch);
 
     sprintf(buffencbroiach, "%d", broiach);
 
@@ -370,7 +385,9 @@ int main(void)
     ILI9341_printText(buffenc3, 10, 45, COLOR_YELLOW, COLOR_YELLOW, 1);
     ILI9341_printText(buffenc4, 10, 55, COLOR_YELLOW, COLOR_YELLOW, 1);
     ILI9341_printText(buffenc5, 10, 65, COLOR_YELLOW, COLOR_YELLOW, 1);
-    ILI9341_printText(buffencbroiach, 10, 85, COLOR_YELLOW, COLOR_YELLOW, 4);
+    ILI9341_printText(buffenc6, 10, 75, COLOR_YELLOW, COLOR_YELLOW, 1);
+    ILI9341_printText(buffenc7, 10, 85, COLOR_YELLOW, COLOR_YELLOW, 1);
+    ILI9341_printText(buffencbroiach, 10, 95, COLOR_YELLOW, COLOR_YELLOW, 4);
 
 //    x += 10.0001;y += 11.0001;z += 12.0001;
 //    xact += 13.0001;yact += 14.0001;zact += 15.0001;
