@@ -998,6 +998,7 @@ Inc/stm32f4xx_hal_conf.h
 Inc/stm32f4xx_it.h
 LCD/MA_ILI9341.c
 LCD/MA_ILI9341.h
+README.txt
 STM32F407VETx_FLASH.ld
 STM32F407_FREQ_METER.ioc
 Src/main.c
